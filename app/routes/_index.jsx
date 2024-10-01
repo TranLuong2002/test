@@ -14,14 +14,12 @@ export const meta = () => {
 
 export default function Index() {
   const fetcher = useFetcher();
-  const fetcher2 = useFetcher();
+  
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const handleAuth0Login = () => {
     fetcher.submit(null, { method: "post", action: "/auth/auth0" });
   };
-  const logout = () => {
-    fetcher2.submit(null, { method: "post", action: "/auth/logout" });
-  };
+  
 
   const toggleDropdown = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -54,11 +52,7 @@ export default function Index() {
                 Sign In
               </Button>
             </li>
-            <li>
-              <Button onClick={logout} color="primary" variant="flat">
-                Sign Out
-              </Button>
-            </li>
+            
           </ul>
         </nav>
       </header>

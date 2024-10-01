@@ -1,8 +1,11 @@
 import { authenticator } from "../server/auth.server.js";
+import { getSession, commitSession } from "../server/session.server.js";
 import { useLoaderData } from "@remix-run/react";
 import { json } from "@remix-run/node";
 import { PrismaClient } from "@prisma/client";
+import { useFetcher } from "@remix-run/react";
 import {
+  Button,
   Navbar,
   NavbarBrand,
   NavbarContent,
@@ -17,39 +20,50 @@ import {
 const prisma = new PrismaClient();
 export async function loader({ request }) {
   const user = await authenticator.isAuthenticated(request);
-  console.log(user);
-
   if (!user) {
     return json({ error: "User not authenticated" }, { status: 401 });
   }
 
+  const session = await getSession(request.headers.get("Cookie"));
+
   // Kiểm tra xem người dùng đã có trong database hay chưa
-  const existingUser = await prisma.user.findUnique({
+  let existingUser = await prisma.user.findUnique({
     where: { email: user._json.email },
   });
 
   // Nếu người dùng chưa tồn tại, tạo mới trong database
   if (!existingUser) {
-    await prisma.user.create({
+    existingUser = await prisma.user.create({
       data: {
         email: user._json.email,
-        userName: user._json.name, // Dùng trường "name" từ Auth0
-        picture: user._json.picture, // Dùng ảnh profile từ Auth0
-        isEmailVerified: user._json.email_verified, // Xác nhận email có được verify từ Auth0
+        userName: user._json.name,
+        picture: user._json.picture,
+        isEmailVerified: user._json.email_verified,
       },
     });
   }
 
-  // Trả về dữ liệu người dùng
-  return json({ user });
+  // Lưu `userId` vào session
+  session.set("userId", existingUser.id);
+
+  // Gửi lại cookie có chứa session mới tạo về cho client
+  return json({ user: existingUser }, {
+    headers: {
+      "Set-Cookie": await commitSession(session),
+    },
+  });
 }
+
 export default function Profile() {
   const { user } = useLoaderData();
 
   if (!user) {
     return <p>Loading...</p>; // Hoặc thông báo lỗi nếu không có người dùng
   }
-
+  const fetcher2 = useFetcher();
+  const logout = () => {
+    fetcher2.submit(null, { method: "post", action: "/auth/logout" });
+  };
   return (
     <header>
       <Navbar>
@@ -97,7 +111,9 @@ export default function Profile() {
                 Help & Feedback
               </DropdownItem>
               <DropdownItem key="logout" color="danger">
-                Log Out
+              <Button onClick={logout} >
+                Sign Out
+              </Button>
               </DropdownItem>
             </DropdownMenu>
           </Dropdown>
