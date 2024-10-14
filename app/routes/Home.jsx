@@ -1,7 +1,7 @@
 import { authenticator } from "../server/auth.server.js";
 import { getSession, commitSession } from "../server/session.server.js";
 import { useLoaderData } from "@remix-run/react";
-import { json } from "@remix-run/node";
+import { json,redirect  } from "@remix-run/node";
 import { PrismaClient } from "@prisma/client";
 import { useFetcher } from "@remix-run/react";
 import {
@@ -19,9 +19,10 @@ import {
 } from "@nextui-org/react";
 const prisma = new PrismaClient();
 export async function loader({ request }) {
+  //add middleware to check if user is authenticated
   const user = await authenticator.isAuthenticated(request);
   if (!user) {
-    return json({ error: "User not authenticated" }, { status: 401 });
+    return json({ error: "Chưa đăng nhập vui lòng đăng nhập" }, { status: 401 });
   }
 
   const session = await getSession(request.headers.get("Cookie"));
@@ -43,7 +44,7 @@ export async function loader({ request }) {
     });
   }
 
-  // Lưu `userId` vào session
+  // gán `userId` vào session
   session.set("userId", existingUser.id);
 
   // Gửi lại cookie có chứa session mới tạo về cho client
@@ -55,10 +56,15 @@ export async function loader({ request }) {
 }
 
 export default function Profile() {
-  const { user } = useLoaderData();
+  const { user,error  } = useLoaderData();
 
-  if (!user) {
-    return <p>Loading...</p>; // Hoặc thông báo lỗi nếu không có người dùng
+  if (error) {
+    return (
+      <div>
+        <h2>{error}</h2> 
+        <p>Vui lòng đăng nhập để vào hệ thống.</p>
+      </div>
+    );
   }
   const fetcher2 = useFetcher();
   const logout = () => {
@@ -70,21 +76,20 @@ export default function Profile() {
         <NavbarBrand>
           <p className="font-bold text-inherit">ACME</p>
         </NavbarBrand>
-
         <NavbarContent className="hidden sm:flex gap-4" justify="center">
           <NavbarItem>
-            <Link color="foreground" href="#">
-              Features
+            <Link color="foreground" href="/product">
+              Product
             </Link>
           </NavbarItem>
           <NavbarItem isActive>
-            <Link href="#" aria-current="page" color="secondary">
-              Customers
+            <Link href="/react" aria-current="page" color="secondary">
+              React test
             </Link>
           </NavbarItem>
           <NavbarItem>
-            <Link color="foreground" href="#">
-              Integrations
+            <Link color="foreground" href="/test">
+             Test
             </Link>
           </NavbarItem>
         </NavbarContent>

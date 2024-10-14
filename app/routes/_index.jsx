@@ -1,4 +1,3 @@
-import "../styles/Home.css";
 import { useState } from "react";
 import { Button, ButtonGroup } from "@nextui-org/react";
 import { Link } from "@nextui-org/react";

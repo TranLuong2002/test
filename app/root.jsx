@@ -5,7 +5,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@remix-run/react";
-// import { NextUIProvider } from "@nextui-org/react";
+/* import { NextUIProvider } from "@nextui-org/react"; */
 import {
   NextUIProvider,
   Button,
@@ -14,9 +14,9 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@nextui-org/react";
-
 import "./tailwind.css";
-
+import Layout_Nabar from "./components/layout";
+import Layout_footer from "./components/footer";
 export const links = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
@@ -52,7 +52,9 @@ export function Layout({ children }) {
 export default function App() {
   return (
     <NextUIProvider>
+      <Layout_Nabar/>
       <Outlet />
+      <Layout_footer/>
     </NextUIProvider>
   );
 }
